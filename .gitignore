@@ -1,0 +1,8 @@
+mapt
+tests/test_vercmp
+tests/test_vercmp_dpkg
+*.o
+*.d
+src/*.o
+src/*.d
+compile_commands.json

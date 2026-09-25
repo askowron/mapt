@@ -1,0 +1,114 @@
+.TH MAPT 1 "September 2026" "mapt 0.1.0" "User Commands"
+.SH NAME
+mapt \- two panel package manager for APT
+.SH SYNOPSIS
+.B mapt
+.RB [ \-h ]
+.RB [ \-V ]
+.SH DESCRIPTION
+.B mapt
+is a two panel, full screen terminal interface for APT written in C with
+ncurses.  The left panel lists the packages reported as installed by
+.BR dpkg-query (1)
+(optionally only those with an upgrade available),
+the right panel lists the packages of the APT cache that are not
+installed, together with their candidate version and origin repository:
+the two panels are a strict partition of the database.
+.PP
+Packages with dependencies (Depends or PreDepends) show a "[+]" marker
+left of their name; expanding the tree inserts their direct
+dependencies as indented child rows, drawn in cyan when the child
+is installed itself.
+.PP
+Reading data never requires root privileges.  Every command that changes
+the system is run through
+.B sudo
+and only after an explicit confirmation dialog.
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Print a short usage summary and exit.
+.TP
+.BR \-V ", " \-\-version
+Print the version and exit.
+.SH KEYS
+.SS Panels
+.TP
+.BR Up ", " Down ", " PgUp ", " PgDn ", " Home ", " End
+Move the cursor.
+.TP
+.B Tab
+Switch the focused panel.  A mouse click in either panel has the same
+effect.
+.TP
+.BR Enter ", " Left ", " Right
+Expand or collapse the dependency tree of the current package
+(Right expands, Left collapses, Enter toggles).
+.TP
+.B F3
+Show details of the selected package.
+.TP
+.BR F4
+List the files owned by the package (dpkg \-L), or the archive file.
+.TP
+.BR F7
+Find a package by substring.
+.TP
+.IR a\-z ", " Backspace ", " Esc
+Incremental (jump to) search inside a panel.
+.SS Mouse
+.TP
+.B Left click
+Activate a panel and select the package under the pointer.  Double click
+expands or collapses its dependency tree.
+.TP
+.B Wheel
+Scroll either panel, text viewers and live command output.
+.TP
+.B Click
+Invoke menu titles, menu entries, function-key labels, dialog buttons and
+scrollbar tracks.  In a text field, click to place the cursor.
+.SS Marking and actions
+.TP
+.B Insert
+Toggle the mark of the current package and move down.
+.TP
+.B +
+Mark packages matching a glob pattern.
+.TP
+.B \-
+Clear all marks in the current panel.
+.TP
+.B F5
+Install (or reinstall) the marked or selected packages.
+.TP
+.B F6
+Upgrade the marked or selected packages.
+.TP
+.BR F8 ", " Delete
+Remove the marked or selected packages.
+.TP
+.B Ctrl+R
+Re-read the package database.
+.SS Global
+.TP
+.BR F1 ", " F2 ", " F9 ", " F10
+Help, menu, menu, quit.
+.SH PROGRESS
+When the package tools report percentages (apt-get run with
+\-\-show\-progress, or dpkg's "Reading database ... NN%" lines) the
+command window draws a progress bar; such lines are shown as the bar
+only and never appear in the log.  When no percentage is available
+(for example during
+.BR "apt-get update" )
+an animated spinner is drawn instead.  The startup window that loads
+the package database shows the spinner next to the current step as
+well.
+.SH FILES
+No configuration files are used.
+.SH SEE ALSO
+.BR apt-get (8),
+.BR apt-cache (8),
+.BR dpkg (1)
+.SH AUTHOR
+APPIT Adam Skowroński <info@appit.pl>.
