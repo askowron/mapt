@@ -1,0 +1,125 @@
+name: Publish APT repository
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and sign repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            apt-utils \
+            build-essential \
+            debhelper \
+            dpkg-dev \
+            fakeroot \
+            gnupg \
+            libncurses-dev
+
+      - name: Build, index, and sign the repository
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${GPG_PRIVATE_KEY:-}" ]; then
+            echo "Missing repository secret: GPG_PRIVATE_KEY" >&2
+            exit 1
+          fi
+
+          export GNUPGHOME="$(mktemp -d)"
+          trap 'rm -rf "$GNUPGHOME"' EXIT
+          chmod 700 "$GNUPGHOME"
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+
+          key_id="${GPG_KEY_ID:-}"
+          if [ -z "$key_id" ]; then
+            key_id="$(gpg --batch --list-secret-keys --with-colons |
+              awk -F: '$1 == "sec" { print $5; exit }')"
+          fi
+          test -n "$key_id"
+
+          # Build the binary package and keep the main .deb separate from
+          # the optional debug-symbol package.
+          dpkg-buildpackage -us -uc -b
+          deb_file="$(find .. -maxdepth 1 -type f \
+            -name 'mapt_*_*.deb' ! -name '*dbgsym*' |
+            sort | tail -n 1)"
+          test -n "$deb_file"
+
+          architecture="$(dpkg-deb -f "$deb_file" Architecture)"
+          repo="$RUNNER_TEMP/mapt-apt-repository"
+          package_dir="$repo/pool/main/m/mapt"
+          index_dir="$repo/dists/stable/main/binary-$architecture"
+          mkdir -p "$package_dir" "$index_dir"
+          cp "$deb_file" "$package_dir/"
+
+          (cd "$repo" &&
+            dpkg-scanpackages --arch "$architecture" pool \
+              > "dists/stable/main/binary-$architecture/Packages")
+          gzip -9kf "$index_dir/Packages"
+
+          apt-ftparchive \
+            -o APT::FTPArchive::Release::Origin=mapt \
+            -o APT::FTPArchive::Release::Label=mapt \
+            -o APT::FTPArchive::Release::Suite=stable \
+            -o APT::FTPArchive::Release::Codename=stable \
+            -o APT::FTPArchive::Release::Architectures="$architecture" \
+            -o APT::FTPArchive::Release::Components=main \
+            release "$repo/dists/stable" > "$repo/dists/stable/Release"
+
+          gpg_args=(--batch --yes --pinentry-mode loopback)
+          if [ -n "${GPG_PASSPHRASE:-}" ]; then
+            gpg_args+=(--passphrase "$GPG_PASSPHRASE")
+          fi
+          gpg "${gpg_args[@]}" --clearsign \
+            --output "$repo/dists/stable/InRelease" \
+            "$repo/dists/stable/Release"
+          gpg "${gpg_args[@]}" --detach-sign \
+            --output "$repo/dists/stable/Release.gpg" \
+            "$repo/dists/stable/Release"
+          gpg --armor --export "$key_id" > \
+            "$repo/mapt-archive-keyring.gpg"
+          test -s "$repo/mapt-archive-keyring.gpg"
+          touch "$repo/.nojekyll"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/mapt-apt-repository
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

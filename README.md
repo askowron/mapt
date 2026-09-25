@@ -70,6 +70,12 @@ make install    # instaluje do /usr/local/bin + stronę man
 `apt-cache policy`) — niczego nie modyfikuje bez pytania, a wszystkie
 operacje zapisujące przechodzą przez `sudo` z potwierdzeniem.
 
+## Publikacja APT
+
+Repozytorium APT jest publikowane przez GitHub Pages po utworzeniu tagu
+`v*`. Szczegóły konfiguracji klucza GPG, sekretów GitHub i adresu klienta
+znajdują się w [`doc/APT-REPOSITORY.md`](doc/APT-REPOSITORY.md).
+
 ## Skróty klawiszowe
 
 ### Nawigacja
