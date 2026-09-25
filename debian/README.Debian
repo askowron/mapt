@@ -1,0 +1,6 @@
+mapt for Debian
+================
+
+mapt uses the system ncursesw library at runtime.  The sudo package is
+recommended because package-changing operations are deliberately routed
+through sudo; read-only package browsing works without it.

@@ -6,3 +6,7 @@ tests/test_vercmp_dpkg
 src/*.o
 src/*.d
 compile_commands.json
+debian/.debhelper/
+debian/files
+debian/*.substvars
+debian/debhelper-build-stamp

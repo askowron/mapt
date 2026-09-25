@@ -1,0 +1,19 @@
+Source: mapt
+Section: admin
+Priority: optional
+Maintainer: APPIT Adam Skowroński <info@appit.pl>
+Homepage: https://github.com/askowron/mapt
+Build-Depends:
+ debhelper-compat (= 13),
+ libncurses-dev
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+
+Package: mapt
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: sudo
+Description: two-panel terminal package manager for APT
+ mapt is a full-screen terminal interface for APT with separate panels
+ for installed and available packages.  It supports package details,
+ dependency trees, marking, mouse navigation, and keyboard shortcuts.
