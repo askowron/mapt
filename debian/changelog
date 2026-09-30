@@ -1,3 +1,11 @@
+mapt (0.1.3) unstable; urgency=medium
+
+  * Separate the body of a dialog from its key hints with a horizontal
+    rule.  The hint line used to sit on the last row of the text, so the
+    last visible line of the Info window was never readable.
+
+ -- APPIT Adam Skowroński <info@appit.pl>  Wed, 30 Sep 2026 11:40:00 +0200
+
 mapt (0.1.2) unstable; urgency=medium
 
   * Open the details window without waiting for apt-cache.  F3 used to run
