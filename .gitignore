@@ -6,6 +6,13 @@ tests/test_vercmp_dpkg
 src/*.o
 src/*.d
 compile_commands.json
+tests/test_shadow_leak
+# Signing material: never belongs in the repository.  The APT archive key
+# lives in GitHub Secrets (GPG_PRIVATE_KEY, GPG_PASSPHRASE, GPG_KEY_ID);
+# local copies are a working backup only.
+*.asc
+*.key
+*passphrase*
 debian/.debhelper/
 debian/files
 debian/*.substvars
