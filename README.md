@@ -5,7 +5,7 @@ klawisze F1–F10 i kolorowy, pełnoekranowy interfejs terminalowy.
 Napisany w C11 z użyciem **ncurses**.
 
 ```
- mapt 0.1.0                      14:32
+ mapt 0.1.1                      14:32
  File  Mark  Command  Options  Help
 ┌ Installed ──────────────(1885)┐┌ Available ────────────(84845)┐
 │ Package     Version          S││ Package     Version          O │

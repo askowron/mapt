@@ -30,8 +30,8 @@ gpg --armor --export-secret-keys --pinentry-mode loopback \
 Workflow uruchamia się po utworzeniu tagu `v*`:
 
 ```sh
-git tag -s v0.1.0 -m 'mapt 0.1.0'
-git push origin v0.1.0
+git tag -s v0.1.1 -m 'mapt 0.1.1'
+git push origin v0.1.1
 ```
 
 Można też uruchomić workflow ręcznie z zakładki **Actions**.

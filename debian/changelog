@@ -1,3 +1,13 @@
+mapt (0.1.1) unstable; urgency=medium
+
+  * Fix a stale drop shadow: closing a popup and opening the next one
+    without an intervening full redraw left the black shadow of the closed
+    window on screen (for example File > Info, or Find... followed by an
+    alert).  ui_shadow now saves the cells it covers and ui_unshadow
+    restores them when the window is destroyed.
+
+ -- APPIT Adam Skowroński <info@appit.pl>  Wed, 30 Sep 2026 09:05:35 +0200
+
 mapt (0.1.0) unstable; urgency=medium
 
   * Initial Debian package.
