@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 APPIT Adam Skowroński
+ */
 #include "vercmp.h"
 
 #include <ctype.h>

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 APPIT Adam Skowroński
+ */
 #ifndef MAPT_UI_H
 #define MAPT_UI_H
 

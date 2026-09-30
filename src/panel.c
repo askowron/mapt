@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 APPIT Adam Skowroński
+ */
 #include "panel.h"
 #include "util.h"
 #include "vercmp.h"

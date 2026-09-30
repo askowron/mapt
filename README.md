@@ -196,4 +196,5 @@ APPIT Adam Skowroński <info@appit.pl>
 
 ## Licencja
 
-MIT — zobacz nagłówki plików źródłowych.
+MIT — pełny tekst w [`LICENSE`](LICENSE). Pliki źródłowe oznaczają licencję
+nagłówkiem `SPDX-License-Identifier: MIT`.

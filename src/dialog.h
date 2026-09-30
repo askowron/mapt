@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 APPIT Adam Skowroński
+ */
 #ifndef MAPT_DIALOG_H
 #define MAPT_DIALOG_H
 
