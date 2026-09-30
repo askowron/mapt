@@ -89,6 +89,11 @@ sudo apt update
 sudo apt install mapt
 ```
 
+Repozytorium przechowuje tylko najnowszą wersję, więc `apt upgrade` zadziała
+tylko dla maszyn bez zainstalowanego `mapt`. Przy zmianie wersji trzeba pakiet
+usunąć i zainstalować ponownie — szczegóły w
+[`doc/APT-REPOSITORY.md`](doc/APT-REPOSITORY.md).
+
 ## Skróty klawiszowe
 
 ### Nawigacja

@@ -44,6 +44,22 @@ https://askowron.github.io/mapt/
 
 Adres finalny można odczytać z kroku deploymentu GitHub Actions.
 
+## Znane ograniczenie: tylko jedna wersja
+
+Każdy przebieg buduje `pool/` od zera, więc repozytorium zawiera wyłącznie
+najnowszą wersję. Poprzednie pliki `.deb` nie są archiwizowane.
+
+Konsekwencja: APT musi pobrać zainstalowaną wersję, żeby ją zastąpić. Maszyna,
+na której jest starsza wersja, nie zaktualizuje się przez `apt upgrade` — pliku
+nie ma w `pool/`. Upgrade wymaga usunięcia pakietu i ponownej instalacji:
+
+```sh
+sudo apt remove mapt
+sudo apt install mapt
+```
+
+Świeże instalacje i reinstalacje działają normalnie.
+
 ## Dodanie repozytorium na komputerze
 
 Klucz publiczny jest publikowany w formacie ASCII-armored. APT oczekuje
