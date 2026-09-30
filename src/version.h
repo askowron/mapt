@@ -6,7 +6,7 @@
 #define MAPT_VERSION_H
 
 #define MAPT_NAME "mapt"
-#define MAPT_VERSION "0.1.1"
+#define MAPT_VERSION "0.1.2"
 #define MAPT_DESC "Two panel package manager for APT"
 
 #endif
