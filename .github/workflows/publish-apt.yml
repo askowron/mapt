@@ -107,6 +107,55 @@ jobs:
           test -s "$repo/mapt-archive-keyring.gpg"
           touch "$repo/.nojekyll"
 
+          version="$(dpkg-deb -f "$deb_file" Version)"
+          cat > "$repo/index.html" <<HTML
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>mapt APT repository</title>
+          <style>
+          body {
+            font-family: system-ui, sans-serif;
+            line-height: 1.6;
+            margin: 2rem auto;
+            max-width: 44rem;
+            padding: 0 1rem;
+          }
+          code, pre {
+            background: #f4f4f5;
+            border-radius: 4px;
+            font-size: 0.9em;
+          }
+          pre { overflow-x: auto; padding: 0.75rem; }
+          </style>
+          </head>
+          <body>
+          <h1>mapt APT repository</h1>
+          <p>Signed APT repository for
+          <a href="https://github.com/askowron/mapt">mapt</a>
+          &mdash; a two-panel terminal package manager for APT.</p>
+          <h2>Version $version</h2>
+          <p>Enable the repository:</p>
+          <pre><code>sudo install -d /etc/apt/keyrings
+          curl -fsSL https://askowron.github.io/mapt/mapt-archive-keyring.gpg | sudo tee /etc/apt/keyrings/mapt-archive-keyring.gpg &gt;/dev/null
+          echo 'deb [signed-by=/etc/apt/keyrings/mapt-archive-keyring.gpg] https://askowron.github.io/mapt stable main' | sudo tee /etc/apt/sources.list.d/mapt.list
+          sudo apt update
+          sudo apt install mapt</code></pre>
+          <h2>Signing key</h2>
+          <p>Fingerprint:
+          <code>$key_id</code></p>
+          <h2>Layout</h2>
+          <ul>
+          <li><code>dists/stable/InRelease</code> &mdash; signed index</li>
+          <li><code>pool/main/m/mapt/</code> &mdash; packages</li>
+          <li><code>mapt-archive-keyring.gpg</code> &mdash; public key</li>
+          </ul>
+          </body>
+          </html>
+          HTML
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
