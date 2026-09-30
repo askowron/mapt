@@ -76,6 +76,19 @@ Repozytorium APT jest publikowane przez GitHub Pages po utworzeniu tagu
 `v*`. Szczegóły konfiguracji klucza GPG, sekretów GitHub i adresu klienta
 znajdują się w [`doc/APT-REPOSITORY.md`](doc/APT-REPOSITORY.md).
 
+Instalacja z repozytorium:
+
+```sh
+sudo install -d /etc/apt/keyrings
+curl -fsSL https://askowron.github.io/mapt/mapt-archive-keyring.gpg \
+  | sudo gpg --dearmor --yes \
+      --output /etc/apt/keyrings/mapt-archive-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/mapt-archive-keyring.gpg] https://askowron.github.io/mapt stable main' \
+  | sudo tee /etc/apt/sources.list.d/mapt.list
+sudo apt update
+sudo apt install mapt
+```
+
 ## Skróty klawiszowe
 
 ### Nawigacja

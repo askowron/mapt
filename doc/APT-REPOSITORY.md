@@ -46,11 +46,17 @@ Adres finalny można odczytać z kroku deploymentu GitHub Actions.
 
 ## Dodanie repozytorium na komputerze
 
+Klucz publiczny jest publikowany w formacie ASCII-armored. APT oczekuje
+binarnego keyringu, więc plik trzeba przed użyciem zdearmorować przez
+`gpg --dearmor`. Bez tego kroku `apt update` kończy się błędem
+`NO_PUBKEY E1C3C1739078B38F`.
+
 ```sh
 sudo install -d /etc/apt/keyrings
 
 curl -fsSL https://askowron.github.io/mapt/mapt-archive-keyring.gpg \
-  | sudo tee /etc/apt/keyrings/mapt-archive-keyring.gpg >/dev/null
+  | sudo gpg --dearmor --yes \
+      --output /etc/apt/keyrings/mapt-archive-keyring.gpg
 
 echo 'deb [signed-by=/etc/apt/keyrings/mapt-archive-keyring.gpg] https://askowron.github.io/mapt stable main' \
   | sudo tee /etc/apt/sources.list.d/mapt.list

@@ -139,7 +139,7 @@ jobs:
           <h2>Version $version</h2>
           <p>Enable the repository:</p>
           <pre><code>sudo install -d /etc/apt/keyrings
-          curl -fsSL https://askowron.github.io/mapt/mapt-archive-keyring.gpg | sudo tee /etc/apt/keyrings/mapt-archive-keyring.gpg &gt;/dev/null
+          curl -fsSL https://askowron.github.io/mapt/mapt-archive-keyring.gpg | sudo gpg --dearmor --yes --output /etc/apt/keyrings/mapt-archive-keyring.gpg
           echo 'deb [signed-by=/etc/apt/keyrings/mapt-archive-keyring.gpg] https://askowron.github.io/mapt stable main' | sudo tee /etc/apt/sources.list.d/mapt.list
           sudo apt update
           sudo apt install mapt</code></pre>
