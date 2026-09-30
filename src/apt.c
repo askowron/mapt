@@ -600,10 +600,22 @@ char *apt_pkg_info(const Package *p)
 	show_stanza(p->name, &st, &show_st);
 
 	buf_init(&deps);
-	dep_argv[2] = (char *)p->name;
-	if (cap_run(dep_argv, &cap) >= 0)
-		append_depends(&deps, cap.out.data ? cap.out.data : "");
-	cap_free(&cap);
+	if (p->flags & PKGF_DEPS) {
+		/* pkgdb_fetch_deps() already asked "apt-cache depends"
+		 * for the "[+]" markers of this row, so reuse its answer
+		 * instead of paying for a second run (~0.3s). */
+		size_t i;
+
+		for (i = 0; i < p->n_deps; i++)
+			buf_printf(&deps, "  %s\n", p->deps[i]);
+		if (p->n_deps == 0)
+			buf_puts(&deps, "  (none reported)\n");
+	} else {
+		dep_argv[2] = (char *)p->name;
+		if (cap_run(dep_argv, &cap) >= 0)
+			append_depends(&deps, cap.out.data ? cap.out.data : "");
+		cap_free(&cap);
+	}
 
 	buf_init(&info);
 	buf_printf(&info, "Package:       %s\n", p->name);

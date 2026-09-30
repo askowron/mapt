@@ -30,6 +30,16 @@ static long g_load_t0, g_load_drawn;
 static int g_origin_failed; /* stop asking for origins after a failure */
 static int g_deps_failed;   /* stop asking for deps after a failure */
 
+/* Details window of the package under the cursor.  apt_pkg_info() costs
+ * three apt-cache runs (~0.7s), far too slow to sit between the keypress
+ * and the window, so the text is built while the user reads the screen and
+ * the keypress only opens the window.  One slot is enough: F3 always
+ * applies to the row the cursor is on. */
+static char *g_info_name;
+static char *g_info_text;
+
+static void info_cache_drop(void);
+
 /* Manual double-click fallback for terminals that do not expose a
  * BUTTON1_DOUBLE_CLICKED event of their own. */
 static int g_click_panel = -1;
@@ -345,6 +355,8 @@ static void reload_data(void)
 
 	g_origin_failed = 0;
 	g_deps_failed = 0;
+	/* The cached details text describes the old package objects. */
+	info_cache_drop();
 	load_progress(NULL, "Loading package database...");
 	rc = pkgdb_load(&g_db, load_progress, NULL);
 	load_done();
@@ -690,6 +702,45 @@ static void do_remove(int purge)
 }
 
 /*
+ * Function: Drop the cached details text of the package under the cursor.
+ * Parameters: None.
+ * Return (void): No return value.
+ */
+static void info_cache_drop(void)
+{
+	free(g_info_name);
+	free(g_info_text);
+	g_info_name = NULL;
+	g_info_text = NULL;
+}
+
+/*
+ * Function: Build the details text for the package under the cursor.
+ *
+ * Runs in the idle branch of the main loop, where the origins and the
+ * dependency markers are resolved, so F3 finds the text ready.  Nothing is
+ * repainted: the details window reads the cache when it opens.
+ * Parameters: None.
+ * Return (void): No return value.
+ */
+static void prefetch_current_info(void)
+{
+	Package *pk = panel_current(&g_panels[g_active]);
+	char *text;
+
+	if (!pk || (g_info_text && strcmp(g_info_name, pk->name) == 0))
+		return;
+	/* The origins and the dependency list of the row have to be
+	 * resolved first: they are part of the same details text. */
+	if (!(pk->flags & PKGF_ORIGIN) || !(pk->flags & PKGF_DEPS))
+		return;
+	text = apt_pkg_info(pk);
+	info_cache_drop();
+	g_info_name = xstrdup(pk->name);
+	g_info_text = text;
+}
+
+/*
  * Function: Show information about the package in the active panel.
  * Parameters: None.
  * Return (void): No return value.
@@ -697,19 +748,25 @@ static void do_remove(int purge)
 static void do_info(void)
 {
 	Package *pk = panel_current(&g_panels[g_active]);
-	char *title, *text;
+	char *title, *text, *cached = NULL;
 
 	if (!pk) {
 		dlg_alert("Info", "No package selected.", 0);
 		return;
 	}
 	title = xasprintf("Info: %s", pk->name);
-	/* Package details are fetched synchronously before the text window
-	 * exists, so do not let a click queue up for the next screen. */
-	ui_mouse_set_enabled(0);
-	text = apt_pkg_info(pk);
-	ui_mouse_set_enabled(1);
-	dlg_text(title, text);
+	/* Usually the idle prefetch already built this, so the window opens
+	 * at once.  Otherwise the details are fetched before the text window
+	 * exists; do not let a click queue up for the next screen. */
+	if (g_info_text && strcmp(g_info_name, pk->name) == 0) {
+		cached = g_info_text;
+		text = NULL;
+	} else {
+		ui_mouse_set_enabled(0);
+		text = apt_pkg_info(pk);
+		ui_mouse_set_enabled(1);
+	}
+	dlg_text(title, text ? text : cached);
 	free(title);
 	free(text);
 }
@@ -1189,6 +1246,10 @@ int main(int argc, char **argv)
 				draw_all();
 				fetched = 1;
 			}
+			/* Same idea for the details window: build the text of
+			 * the row under the cursor so F3 opens it at once.
+			 * The viewer reads the cache, nothing to repaint. */
+			prefetch_current_info();
 			if (fetched) {
 				/* Do not replay clicks received while the
 				 * background policy/depends calls ran. */
@@ -1262,5 +1323,6 @@ int main(int argc, char **argv)
 	panel_free(&g_panels[0]);
 	panel_free(&g_panels[1]);
 	pkgdb_free(&g_db);
+	info_cache_drop();
 	return 0;
 }
