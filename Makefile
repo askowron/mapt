@@ -45,11 +45,17 @@ tests/test_vercmp_dpkg: tests/test_vercmp_dpkg.c src/vercmp.c src/vercmp.h
 tests/test_shadow_leak: tests/test_shadow_leak.c src/ui.c src/util.c src/ui.h src/util.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ tests/test_shadow_leak.c src/ui.c src/util.c $(LDFLAGS) $(LDLIBS)
 
-test: tests/test_vercmp tests/test_vercmp_dpkg tests/test_shadow_leak
+# The test includes src/dialog.c directly to reach the static footer
+# helper, so dialog.c must not be listed on the link line as well.
+tests/test_dialog_footer: tests/test_dialog_footer.c src/dialog.c src/proc.c src/util.c src/ui.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ tests/test_dialog_footer.c src/proc.c src/util.c src/ui.c $(LDFLAGS) $(LDLIBS)
+
+test: tests/test_vercmp tests/test_vercmp_dpkg tests/test_shadow_leak tests/test_dialog_footer
 	./tests/test_vercmp
 	./tests/test_vercmp_dpkg
-	@if [ -t 0 ]; then ./tests/test_shadow_leak; \
-	 else script -qec ./tests/test_shadow_leak /dev/null | tr -d '\r'; fi
+	@if [ -t 0 ]; then ./tests/test_shadow_leak && ./tests/test_dialog_footer; \
+	 else script -qec ./tests/test_shadow_leak /dev/null | tr -d '\r'; \
+	      script -qec ./tests/test_dialog_footer /dev/null | tr -d '\r'; fi
 
 install: $(APP)
 	install -d $(DESTDIR)$(BINDIR) $(DESTDIR)$(MANDIR)

@@ -99,6 +99,31 @@ static int text_width(const char *text)
 }
 
 /*
+ * Function: Draw the footer of a dialog: a bright horizontal rule that
+ *           separates the body from the key hint below it.
+ * Parameters:
+ *   win (WINDOW *): Target window; the rule goes one row above the hint.
+ *   hint (const char *): Key hint text, or NULL for the rule alone.
+ * Return (void): No return value.
+ */
+static void draw_footer(WINDOW *win, const char *hint)
+{
+	int attr = CP(CP_SEL) | A_BOLD;
+	int h, w;
+
+	getmaxyx(win, h, w);
+	if (h < 5 || w < 6)
+		return;
+	/* Cyan reads as a bright rule on the white body of a dialog and on
+	 * the red warning background of the input dialog alike. */
+	wattron(win, attr);
+	mvwhline(win, h - 4, 1, ACS_HLINE, w - 2);
+	wattroff(win, attr);
+	if (hint)
+		mvwaddnstr(win, h - 3, 2, hint, (size_t)(w - 4));
+}
+
+/*
  * Function: Draw a bounded text line into a window.
  * Parameters:
  *   win (WINDOW *): Target window.
@@ -537,8 +562,7 @@ static int input_dialog(const char *title, const char *prompt, char *buf,
 	if (prompt)
 		mvwaddnstr(win, field_row > 2 ? field_row - 2 : 1, 2,
 			   prompt, (size_t)(w - 4));
-	mvwaddnstr(win, h - 3, 2, "[Enter] OK   [Esc] Cancel",
-		   (size_t)(w - 4));
+	draw_footer(win, "[Enter] OK   [Esc] Cancel");
 
 	field_w = w - field_x - 3;
 	if (field_w < 4)
@@ -764,10 +788,12 @@ void dlg_text(const char *title, const char *text)
 	wattron(win, CP(CP_SEL) | A_BOLD);
 	mvwprintw(win, 0, 2, " %s ", title ? title : "Text");
 	wattroff(win, CP(CP_SEL) | A_BOLD);
-	mvwaddnstr(win, h - 3, 2, "arrows/wheel/PgUp/PgDn scroll   Enter/Esc/q close",
-		   (size_t)(w - 4));
+	draw_footer(win,
+		    "arrows/wheel/PgUp/PgDn scroll   Enter/Esc/q close");
 
-	vis = h - 5;
+	/* One row shorter than the body: the last one belongs to the
+	 * separator rule, which the hint line used to overlap. */
+	vis = h - 6;
 	if (vis < 1)
 		vis = 1;
 	if (top > n - vis)
@@ -878,9 +904,8 @@ void dlg_text(const char *title, const char *text)
 			mvwprintw(win, 0, 2, " %s ",
 				  title ? title : "Text");
 			wattroff(win, CP(CP_SEL) | A_BOLD);
-			mvwaddnstr(win, h - 3, 2,
-				   "arrows/wheel/PgUp/PgDn scroll   Enter/Esc/q close",
-				   (size_t)(w - 4));
+			draw_footer(win,
+				    "arrows/wheel/PgUp/PgDn scroll   Enter/Esc/q close");
 			if (top > n - vis)
 				top = n - vis;
 			if (top < 0)
