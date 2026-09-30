@@ -315,6 +315,7 @@ static void load_progress(void *ud, const char *msg)
 static void load_done(void)
 {
 	if (g_load_win) {
+		ui_unshadow(g_load_win);
 		delwin(g_load_win);
 		g_load_win = NULL;
 		touchwin(stdscr);

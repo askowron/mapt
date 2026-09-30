@@ -15,6 +15,21 @@
  * Helpers                                                             *
  * ------------------------------------------------------------------ */
 
+/*
+ * Function: Close a popup window and put the background it covered back.
+ * Parameters:
+ *   win (WINDOW *): Window to destroy; NULL is ignored.
+ * Return (void): No return value.
+ */
+static void close_win(WINDOW *win)
+{
+	if (!win)
+		return;
+	ui_unshadow(win);
+	delwin(win);
+	touchwin(stdscr);
+}
+
 static WINDOW *mkwin_at(int h, int w, int y, int x)
 {
 	WINDOW *win;
@@ -332,8 +347,7 @@ void dlg_alert(const char *title, const char *body, int is_error)
 		if (c != ERR && c != KEY_RESIZE)
 			break;
 	}
-	delwin(win);
-	touchwin(stdscr);
+	close_win(win);
 }
 
 /*
@@ -413,15 +427,13 @@ int dlg_confirm(const char *title, const char *body, int default_yes)
 						if (mx >= bx &&
 						    mx < bx +
 								(int)strlen("[ Yes ]")) {
-							delwin(win);
-							touchwin(stdscr);
+							close_win(win);
 							return 1;
 						}
 						if (mx >= nox &&
 						    mx < nox +
 								(int)strlen("[ No ]")) {
-							delwin(win);
-							touchwin(stdscr);
+							close_win(win);
 							return 0;
 						}
 					}
@@ -438,23 +450,19 @@ int dlg_confirm(const char *title, const char *body, int default_yes)
 				break;
 			case 'y':
 			case 'Y':
-				delwin(win);
-				touchwin(stdscr);
+				close_win(win);
 				return 1;
 			case 'n':
 			case 'N':
-				delwin(win);
-				touchwin(stdscr);
+				close_win(win);
 				return 0;
 			case '\n':
 			case KEY_ENTER:
-				delwin(win);
-				touchwin(stdscr);
+				close_win(win);
 				return sel == 0;
 			case 27:
 			case KEY_F(10):
-				delwin(win);
-				touchwin(stdscr);
+				close_win(win);
 				return 0;
 			default:
 				break;
@@ -583,14 +591,12 @@ static int input_dialog(const char *title, const char *prompt, char *buf,
 			case '\n':
 			case KEY_ENTER:
 				curs_set(0);
-				delwin(win);
-				touchwin(stdscr);
+				close_win(win);
 				return 0;
 			case 27:
 			case KEY_F(10):
 				curs_set(0);
-				delwin(win);
-				touchwin(stdscr);
+				close_win(win);
 				return -1;
 			case KEY_BACKSPACE:
 			case 127:
@@ -857,8 +863,7 @@ void dlg_text(const char *title, const char *text)
 		case KEY_ENTER:
 		case KEY_F(10):
 		case 'q':
-			delwin(win);
-			touchwin(stdscr);
+			close_win(win);
 			free_lines(lines);
 			return;
 		default:
@@ -998,16 +1003,14 @@ int dlg_menu(const char *const *items, int n, int initial, int y, int x,
 					if (left) {
 						if (top_x)
 							*top_x = ev.x;
-						delwin(win);
-						touchwin(stdscr);
+						close_win(win);
 						return DLG_MENU_TOP;
 					}
 					break;
 				}
 				if (!mouse_in_window(win, &ev, &my, &mx)) {
 					if (left) {
-						delwin(win);
-						touchwin(stdscr);
+						close_win(win);
 						return DLG_MENU_CANCEL;
 					}
 					break;
@@ -1027,8 +1030,7 @@ int dlg_menu(const char *const *items, int n, int initial, int y, int x,
 
 					if (idx >= 0 && idx < n &&
 					    !is_sep(items[idx])) {
-						delwin(win);
-						touchwin(stdscr);
+						close_win(win);
 						return idx;
 					}
 				}
@@ -1065,24 +1067,20 @@ int dlg_menu(const char *const *items, int n, int initial, int y, int x,
 					cur--;
 				break;
 			case KEY_LEFT:
-				delwin(win);
-				touchwin(stdscr);
+				close_win(win);
 				return DLG_MENU_LEFT;
 			case KEY_RIGHT:
-				delwin(win);
-				touchwin(stdscr);
+				close_win(win);
 				return DLG_MENU_RIGHT;
 			case '\n':
 			case KEY_ENTER:
-				delwin(win);
-				touchwin(stdscr);
+				close_win(win);
 				return is_sep(items[cur]) ? DLG_MENU_CANCEL
 							  : cur;
 			case 27:
 			case KEY_F(9):
 			case KEY_F(10):
-				delwin(win);
-				touchwin(stdscr);
+				close_win(win);
 				return DLG_MENU_CANCEL;
 			default:
 				if (c == KEY_RESIZE)
@@ -1599,8 +1597,7 @@ int dlg_command(const char *title, char *const argv[],
 
 done:
 	wtimeout(stdscr, 1000);
-	delwin(c.win);
-	touchwin(stdscr);
+	close_win(c.win);
 	free(c.off);
 	buf_free(&c.out);
 	return c.status;

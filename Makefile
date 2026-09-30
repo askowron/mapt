@@ -42,9 +42,14 @@ tests/test_vercmp: tests/test_vercmp.c src/vercmp.c src/vercmp.h
 tests/test_vercmp_dpkg: tests/test_vercmp_dpkg.c src/vercmp.c src/vercmp.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ tests/test_vercmp_dpkg.c src/vercmp.c
 
-test: tests/test_vercmp tests/test_vercmp_dpkg
+tests/test_shadow_leak: tests/test_shadow_leak.c src/ui.c src/util.c src/ui.h src/util.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ tests/test_shadow_leak.c src/ui.c src/util.c $(LDFLAGS) $(LDLIBS)
+
+test: tests/test_vercmp tests/test_vercmp_dpkg tests/test_shadow_leak
 	./tests/test_vercmp
 	./tests/test_vercmp_dpkg
+	@if [ -t 0 ]; then ./tests/test_shadow_leak; \
+	 else script -qec ./tests/test_shadow_leak /dev/null | tr -d '\r'; fi
 
 install: $(APP)
 	install -d $(DESTDIR)$(BINDIR) $(DESTDIR)$(MANDIR)

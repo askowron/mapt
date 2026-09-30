@@ -5,10 +5,19 @@
 #include "ui.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "util.h"
 
 int ui_colors = 0;
+
+/* Cells the shadow of the currently open popup covers.  Closing one popup
+ * usually leads straight into the next one (File > Info, Find... then an
+ * alert), and the main loop redraws the screen only after the last one
+ * closes.  Saving the covered cells lets ui_unshadow put the background
+ * back instead of leaving black cells behind the next dialog. */
+static cchar_t *g_shadow_cells;
+static int g_shadow_y, g_shadow_x, g_shadow_h, g_shadow_w;
 
 /* Mouse reports are not identical across terminals.  Some drivers expose
  * a physical click as PRESSED followed by CLICKED, while others emit a
@@ -206,6 +215,34 @@ void ui_fill_line(int y, int x, int n, int attr)
 }
 
 /*
+ * Function: Number of screen cells a drop shadow would cover.
+ * Parameters:
+ *   h (int): Window height.
+ *   w (int): Window width.
+ *   y (int): Window top row.
+ *   x (int): Window left column.
+ * Return (int): Cell count of the shadow band.
+ */
+static int shadow_cells(int h, int w, int y, int x)
+{
+	int n = 0;
+
+	if (x + w < COLS) {
+		int i;
+
+		for (i = 1; i < h && y + i < LINES; i++)
+			n++;
+	}
+	if (y + h < LINES) {
+		int i;
+
+		for (i = 1; i <= w && x + i < COLS; i++)
+			n++;
+	}
+	return n;
+}
+
+/*
  * Function: Paint a one-cell drop shadow to the right and below a window.
  * Parameters:
  *   win (WINDOW *): Window whose screen position and size define the shadow.
@@ -213,12 +250,39 @@ void ui_fill_line(int y, int x, int n, int attr)
  */
 void ui_shadow(WINDOW *win)
 {
-	int y, x, h, w, i;
+	int y, x, h, w, i, n;
 
 	if (!win)
 		return;
 	getbegyx(win, y, x);
 	getmaxyx(win, h, w);
+
+	n = shadow_cells(h, w, y, x);
+	free(g_shadow_cells);
+	g_shadow_cells = n > 0 ? xcalloc((size_t)n, sizeof(*g_shadow_cells)) :
+				 NULL;
+	g_shadow_y = y;
+	g_shadow_x = x;
+	g_shadow_h = h;
+	g_shadow_w = w;
+
+	i = 0;
+	if (x + w < COLS) { /* right column: one row down, to y+h-1 */
+		int r;
+
+		for (r = 1; r < h && y + r < LINES; r++, i++)
+			if (g_shadow_cells)
+				mvwin_wch(stdscr, y + r, x + w,
+					  &g_shadow_cells[i]);
+	}
+	if (y + h < LINES) { /* bottom row: one column in, corner kept */
+		int c;
+
+		for (c = 1; c <= w && x + c < COLS; c++, i++)
+			if (g_shadow_cells)
+				mvwin_wch(stdscr, y + h, x + c,
+					  &g_shadow_cells[i]);
+	}
 
 	/* CP_BAR is white on black: a space renders as a solid black
 	 * cell - darker than the blue panel background behind a popup,
@@ -238,6 +302,50 @@ void ui_shadow(WINDOW *win)
 	 * wrefresh(win): the doupdate inside it then paints the shadow
 	 * and the dialog in one pass. */
 	wnoutrefresh(stdscr);
+}
+
+/*
+ * Function: Restore the cells a drop shadow covered and forget them.
+ * Parameters:
+ *   win (WINDOW *): The window whose shadow ui_shadow painted.  Its
+ *     position and size must be unchanged since that call.
+ * Return (void): No return value.
+ */
+void ui_unshadow(WINDOW *win)
+{
+	cchar_t *cells = g_shadow_cells;
+	int y, x, h, w, i;
+
+	g_shadow_cells = NULL;
+
+	if (!win || !cells)
+		return;
+	getbegyx(win, y, x);
+	getmaxyx(win, h, w);
+
+	/* Only restore when the geometry still matches: the saved band is
+	 * indexed with the loops below, so a moved window would read past
+	 * the end of it.  Losing the background beats crashing. */
+	if (y != g_shadow_y || x != g_shadow_x || h != g_shadow_h ||
+	    w != g_shadow_w) {
+		free(cells);
+		return;
+	}
+
+	i = 0;
+	if (x + w < COLS) {
+		int r;
+
+		for (r = 1; r < h && y + r < LINES; r++, i++)
+			mvwadd_wch(stdscr, y + r, x + w, &cells[i]);
+	}
+	if (y + h < LINES) {
+		int c;
+
+		for (c = 1; c <= w && x + c < COLS; c++, i++)
+			mvwadd_wch(stdscr, y + h, x + c, &cells[i]);
+	}
+	free(cells);
 }
 
 /*

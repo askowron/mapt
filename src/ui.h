@@ -69,9 +69,11 @@ void ui_draw_spinner(WINDOW *win, int y, int x, long t_ms);
 
 /* One cell drop shadow along the right and bottom edge of a popup
  * window: black background cells painted on stdscr outside the frame.
- * Call it right after creating the window; the full redraw after the
- * dialog closes clears it. */
+ * Call it right after creating the window and ui_unshadow right before
+ * destroying it, so a popup that opens another one does not leave the
+ * shadow of the closed window on screen. */
 void ui_shadow(WINDOW *win);
+void ui_unshadow(WINDOW *win);
 
 /* Centre of a rectangle for a text of the given width. */
 int ui_center_x(const Rect *r, int width);
